@@ -4,6 +4,7 @@
 import csv
 import logging
 import statistics
+import glob
 import numpy as np
 
 from typing import Dict, List, Tuple
@@ -19,7 +20,9 @@ import sklearn.svm
 FeatureVector = Dict[str, float]
 FeatureVectors = List[FeatureVector]
 
-def _segment_features(feature_string):
+TRAIN_TXT = "data/*_train.txt"
+
+def _segment_features(feature_string: str):
     if feature_string == "missing":
         return np.nan
     else:
@@ -29,15 +32,16 @@ def _segment_features(feature_string):
 def extract_features(path: str, input_dict: Dict):
     """Extracts feature vector for each speaker"""
     features: Dict[str, str] = {}
-    if path.startswith("vowel"):
+    if path.startswith("data/vowel"):
         features["F1"] = _segment_features(input_dict["F1_bark"])
         features["F2"] = _segment_features(input_dict["F2_bark"])
         features["F3"] = _segment_features(input_dict["F3_bark"])
-    if path.startswith("fricative"):
+    if path.startswith("data/fricative"):
         features["center_of_gravity"] = _segment_features(input_dict["cog"])
         features["standard_deviation"] = _segment_features(input_dict["sdev"])
         features["skewness"] = _segment_features(input_dict["skew"])
-        features["kurtosis"] = _segment_features(input_dict["kurt"])    
+        features["kurtosis"] = _segment_features(input_dict["kurt"])
+    return features    
 
 def data_imputation(input_ls: List[List]):
     imput = IterativeImputer(imputation_order = "random", random_state = 0)
@@ -53,9 +57,9 @@ def preprocess_features(feature_ls: List[Dict]):
         all_value.append(value_ls)
         value_ls = []
     if len(all_value[0]) == 3: #number of features for vowels
-        discretizer = KBinsDiscretizer(n_bins=[140, 240, 140], encode='ordinal', strategy='quantile')
+        discretizer = KBinsDiscretizer(n_bins=[15, 30, 15], encode='ordinal', strategy='quantile')
     if len(all_value[0]) == 4: #number of features for fricatives
-        discretizer = KBinsDiscretizer(n_bins=[60, 300, 120, 350], encode='ordinal', strategy='quantile')
+        discretizer = KBinsDiscretizer(n_bins=[30, 150, 60, 175], encode='ordinal', strategy='quantile')
     binned_feature_ls = discretizer.fit_transform(
         data_imputation(all_value)
         ) #call data_imputation function to impute the missing data
@@ -76,12 +80,40 @@ def extract_features_file(input_path: str) -> Tuple[FeatureVectors, List[str]]:
         for row in csv.DictReader(source, delimiter = "\t"):
             labels.append(row["sex"])
             features.append(extract_features(input_path, row))
-
     return preprocess_features(features), labels
 
 def main() -> None:
+    correct: List[int] = []
+    size: List[int] = []
     logging.basicConfig(format="%(levelname)s: %(message)s", level = "INFO")
-    vectorizer = sklearn.feature_extraction.DictVectorizer
+    for train_path in glob.iglob(TRAIN_TXT):
+        vectorizer = sklearn.feature_extraction.DictVectorizer()
+        #training
+        (feature_vectors, y) = extract_features_file(train_path)
+        x = vectorizer.fit_transform(feature_vectors)
+        model = sklearn.linear_model.LogisticRegression(
+            penalty = "l1",
+            C = 10,
+            solver = "liblinear",
+        )
+        model.fit(x,y)
+        test_path = train_path.replace("train", "test")
+        #evaluation
+        (feature_vectors, y) = extract_features_file(test_path)
+        x = vectorizer.transform(feature_vectors)
+        y_predict = model.predict(x)
+        assert len(y) == len(y_predict), "Lengths don't match"
+        correct.append(sum(y == y_predict))
+        size.append(len(y))
+    #accuracy info
+    micro_accuracy = sum(correct) / sum(size)
+    print(micro_accuracy)
+
+
+if __name__ == "__main__":
+    main()
+
+    
 
 
 

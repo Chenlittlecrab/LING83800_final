@@ -54,10 +54,21 @@ for i, row in enumerate(ls_data):
     for j, key in enumerate(row):
         row[key] = ls_data_2[i][j]
     ls_update.append(row)
-print(ls_update)
+#print(ls_update)
 
 bined_features = KBinsDiscretizer(n_bins=[5, 10, 20], encode='ordinal', strategy='uniform')
 ls_bined_data = bined_features.fit_transform(data_imputation(ls_data_2))
-print(data_imputation(ls_data_2))
-print(ls_bined_data)
+#print(data_imputation(ls_data_2))
+#print(ls_bined_data)
+
+
+from typing import Dict
+
+input_diction = {"F1": 345, "F2": 645, "F3": 1200} 
+def dic_value_printer(input: Dict):
+    new_dict = {}
+    new_dict["f1"] = input["F1"]
+    return new_dict
+
+print(dic_value_printer(input_diction))
 
