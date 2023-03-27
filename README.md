@@ -11,7 +11,7 @@ The project will use logistic regression and Support Vector Machines (SVM) to tr
 
 ## Part 1: preparation
 
-split_clean_data.py is used for cleaning vowel (vowel_data.txt) and fricative (fricative_data.txt) data and for splitting them into train and test data. 
+[split_clean_data.py](https://github.com/Chenlittlecrab/LING83800_final/blob/master/split_clean_data.py) is used for cleaning vowel (vowel_data.txt) and fricative (fricative_data.txt) data and for splitting them into train and test data. 
 
 The output of this part are training and testing txt files for vowels and fricatives seperately. 
 
