@@ -17,4 +17,4 @@ The output of this part are training and testing txt files for vowels and fricat
 
 ## Part 2: train and evaluation
 
-gender_classification.py then takes the training and testing txt files as the input and calculate the accuracy of the model built with sklearn using logistic regression and SVM. 
+[gender_classification.py](https://github.com/Chenlittlecrab/LING83800_final/blob/master/gender_classification_final.py) then takes the training and testing txt files as the input and calculate the accuracy of the model built with sklearn using logistic regression and SVM. 
